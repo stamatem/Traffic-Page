@@ -133,6 +133,31 @@ for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' '
     uci delete firewall.@rule[$IDX] 2>/dev/null && FW_CHANGED=1
 done
 
+for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' -v src="$TRAFFIC_IFACE" '
+    /^firewall\.@forwarding\[[0-9]+\]\./ {
+        section=$2
+        prop=$3
+        value=$0
+        sub(/^[^=]*=/, "", value)
+        gsub(/\047/, "", value)
+
+        data[section,prop]=value
+        sections[section]=1
+    }
+
+    END {
+        for (section in sections) {
+            if (data[section,"src"] == src && data[section,"dest"] == "lan") {
+                idx=section
+                gsub(/@forwarding\[|\]/, "", idx)
+                print idx
+            }
+        }
+    }
+' | sort -rn); do
+    uci delete firewall.@forwarding[$IDX] 2>/dev/null && FW_CHANGED=1
+done
+
 if [ "$FW_CHANGED" = "1" ]; then
     uci commit firewall 2>/dev/null
     /etc/init.d/firewall reload >/dev/null 2>&1
