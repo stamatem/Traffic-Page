@@ -4,11 +4,11 @@ FORCE=0
 [ "$1" = "force" ] && FORCE=1
 
 # --- PATHS ---
-BASE="/tmp/bandixpage"
+BASE="/tmp/trafficpage"
 WWW="/www/data"
-LOCK="$BASE/bandix-quota.lock"
-LOG="$BASE/bandixquota.log"
-DATA="$WWW/bandix-buffer.json"
+LOCK="$BASE/traffic-quota.lock"
+LOG="$BASE/trafficquota.log"
+DATA="$WWW/traffic-buffer.json"
 USERS_FILE="$WWW/users.json"
 MAC_LOOKUP="$BASE/mac_lookup"
 MAC_IP_MAP="$BASE/mac_ip_map"
@@ -49,7 +49,7 @@ esac
 ROUTER_IP="$NETWORK.1"
 
 [ "$FORCE" = "1" ] && MODE="CONFIG MODE (FIREWALL REBUILD)" || MODE="NORMAL RUN (NO FIREWALL REBUILD)"
-echo "[Bandix-Quota] $MODE" >> "$LOG"
+echo "[Traffic-Quota] $MODE" >> "$LOG"
 
 # --- BUILD MAC -> IP LOOKUP IN ONE UCI PASS ---
 uci show dhcp 2>/dev/null | awk -F'[.=]' '
@@ -89,7 +89,7 @@ if ! jq -r '
     | select(.[0] != "")
     | @tsv
 ' "$DATA" > "$TRAFFIC_RAW" 2>/dev/null; then
-    echo "[Bandix-Quota] traffic jq failed" >> "$LOG"
+    echo "[Traffic-Quota] traffic jq failed" >> "$LOG"
     exit 1
 fi
 
@@ -125,7 +125,7 @@ if ! jq -r '
     | [$user, ., ($quota | tostring)]
     | @tsv
 ' "$USERS_FILE" > "$USER_MACS_RAW" 2>/dev/null; then
-    echo "[Bandix-Quota] users jq failed" >> "$LOG"
+    echo "[Traffic-Quota] users jq failed" >> "$LOG"
     exit 1
 fi
 
@@ -176,7 +176,7 @@ awk -v mult="$MULT" -v no_block="$NO_BLOCK" '
 
 HAS_USERS=0
 grep -q '^USER	' "$USER_STATS" && HAS_USERS=1
-echo "[Bandix-Quota] HAS USERS=$HAS_USERS" >> "$LOG"
+echo "[Traffic-Quota] HAS USERS=$HAS_USERS" >> "$LOG"
 
 BLOCK_MACS=$(awk '$1=="BLOCK" { $1=""; print }' "$USER_STATS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 ALLOW_MACS=$(awk '$1=="ALLOW" { $1=""; print }' "$USER_STATS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
@@ -191,7 +191,7 @@ awk '
         gb=$3
         quota=$4
         over=$5 + 0
-        line=sprintf("[Bandix-Quota] %-12s %-10s %-10s", user, gb, quota)
+        line=sprintf("[Traffic-Quota] %-12s %-10s %-10s", user, gb, quota)
 
         if (over == 0) {
             allowed[++allowed_count]=line
@@ -201,15 +201,15 @@ awk '
     }
     END {
         if (allowed_count > 0) {
-            print "[Bandix-Quota]-----------ALLOWED USERS-----------"
-            printf "[Bandix-Quota] %-12s %-10s %-10s\n", "USER", "TOTAL(GB)", "QUOTA(GB)"
+            print "[Traffic-Quota]-----------ALLOWED USERS-----------"
+            printf "[Traffic-Quota] %-12s %-10s %-10s\n", "USER", "TOTAL(GB)", "QUOTA(GB)"
             for (i=1; i<=allowed_count; i++)
                 print allowed[i]
         }
 
         if (blocked_count > 0) {
-            print "[Bandix-Quota]-----------BLOCKED USERS-----------"
-            printf "[Bandix-Quota] %-12s %-10s %-10s\n", "USER", "TOTAL(GB)", "QUOTA(GB)"
+            print "[Traffic-Quota]-----------BLOCKED USERS-----------"
+            printf "[Traffic-Quota] %-12s %-10s %-10s\n", "USER", "TOTAL(GB)", "QUOTA(GB)"
             for (i=1; i<=blocked_count; i++)
                 print blocked[i]
         }
@@ -223,7 +223,7 @@ NEW_HASH=$(printf "%s" "$STATE_STRING" | md5sum | awk '{print $1}')
 OLD_HASH=$(cat "$HASH_FILE" 2>/dev/null)
 
 if [ "$NEW_HASH" = "$OLD_HASH" ] && [ "$FORCE" != "1" ]; then
-    echo "[Bandix-Quota] NO STATE CHANGE" >> "$LOG"
+    echo "[Traffic-Quota] NO STATE CHANGE" >> "$LOG"
     exit 0
 fi
 
@@ -234,7 +234,7 @@ uci show firewall 2>/dev/null | awk -F'[.=]' '
         name=$0
         sub(/^[^=]*=/, "", name)
         gsub(/\047/, "", name)
-        if (name == "bandix_page" || name == "bandix_block" || name == "bandix_allowed" || name == "bandix_unknown")
+        if (name == "traffic_page" || name == "traffic_block" || name == "traffic_allowed" || name == "traffic_unknown")
             print name, section
     }
 ' > "$RULE_CACHE"
@@ -250,14 +250,14 @@ refresh_rule_cache() {
             name=$0
             sub(/^[^=]*=/, "", name)
             gsub(/\047/, "", name)
-            if (name == "bandix_page" || name == "bandix_block" || name == "bandix_allowed" || name == "bandix_unknown")
+            if (name == "traffic_page" || name == "traffic_block" || name == "traffic_allowed" || name == "traffic_unknown")
                 print name, section
         }
     ' > "$RULE_CACHE"
 }
 
 # --- DETECT NEWLY BLOCKED MACS BEFORE FIREWALL UPDATE ---
-BLOCK_RULE_IDX=$(find_rule_index "bandix_block")
+BLOCK_RULE_IDX=$(find_rule_index "traffic_block")
 
 if [ -n "$BLOCK_RULE_IDX" ]; then
     EXISTING_BLOCK_MACS=$(uci -q get firewall.$BLOCK_RULE_IDX.src_mac 2>/dev/null | tr '\n' ' ')
@@ -316,7 +316,7 @@ ensure_rule() {
         uci set firewall.$SECTION.src="$SRC"
 
         if [ -n "$DEST" ]; then
-            if [ "$NAME" = "bandix_page" ]; then
+            if [ "$NAME" = "traffic_page" ]; then
                 uci set firewall.$SECTION.dest_ip="$DEST"
             else
                 uci set firewall.$SECTION.dest="$DEST"
@@ -343,7 +343,7 @@ ensure_rule() {
             FW_CHANGED=1
         }
 
-        if [ "$NAME" = "bandix_page" ]; then
+        if [ "$NAME" = "traffic_page" ]; then
             uci delete firewall.$SECTION.dest 2>/dev/null
 
             [ "$(uci -q get firewall.$SECTION.dest_ip 2>/dev/null)" != "$DEST" ] && {
@@ -389,49 +389,49 @@ ensure_rule() {
 
 # --- APPLY RULES ---
 if [ "$HAS_USERS" = "1" ]; then
-    ensure_rule "bandix_page" "$ZONE" "$ROUTER_IP" "tcp" "ACCEPT" ""
-    ensure_rule "bandix_block" "$ZONE" "*" "all" "REJECT" "$BLOCK_MACS"
-    ensure_rule "bandix_allowed" "$ZONE" "*" "all" "ACCEPT" "$ALLOW_MACS"
-    ensure_rule "bandix_unknown" "$ZONE" "*" "all" "REJECT" ""
+    ensure_rule "traffic_page" "$ZONE" "$ROUTER_IP" "tcp" "ACCEPT" ""
+    ensure_rule "traffic_block" "$ZONE" "*" "all" "REJECT" "$BLOCK_MACS"
+    ensure_rule "traffic_allowed" "$ZONE" "*" "all" "ACCEPT" "$ALLOW_MACS"
+    ensure_rule "traffic_unknown" "$ZONE" "*" "all" "REJECT" ""
 
-    move_rule_to_bottom "bandix_allowed"
-    move_rule_to_bottom "bandix_block"
-    move_rule_to_bottom "bandix_unknown"
-    move_rule_to_top "bandix_page"
+    move_rule_to_bottom "traffic_allowed"
+    move_rule_to_bottom "traffic_block"
+    move_rule_to_bottom "traffic_unknown"
+    move_rule_to_top "traffic_page"
 else
-    UNKNOWN_IDX=$(find_rule_index "bandix_unknown")
+    UNKNOWN_IDX=$(find_rule_index "traffic_unknown")
     if [ -n "$UNKNOWN_IDX" ]; then
         uci set firewall.$UNKNOWN_IDX.enabled='0'
         FW_CHANGED=1
-        echo "[Bandix-Quota] bandix_unknown DISABLED (no users)" >> "$LOG"
+        echo "[Traffic-Quota] traffic_unknown DISABLED (no users)" >> "$LOG"
     fi
 
-    BLOCK_IDX=$(find_rule_index "bandix_block")
+    BLOCK_IDX=$(find_rule_index "traffic_block")
     if [ -n "$BLOCK_IDX" ]; then
         uci delete firewall.$BLOCK_IDX.src_mac 2>/dev/null
         uci set firewall.$BLOCK_IDX.enabled='0'
         FW_CHANGED=1
-        echo "[Bandix-Quota] bandix_block CLEARED + DISABLED (no users)" >> "$LOG"
+        echo "[Traffic-Quota] traffic_block CLEARED + DISABLED (no users)" >> "$LOG"
     fi
 
-    ALLOW_IDX=$(find_rule_index "bandix_allowed")
+    ALLOW_IDX=$(find_rule_index "traffic_allowed")
     if [ -n "$ALLOW_IDX" ]; then
         uci delete firewall.$ALLOW_IDX.src_mac 2>/dev/null
         uci set firewall.$ALLOW_IDX.enabled='0'
         FW_CHANGED=1
-        echo "[Bandix-Quota] bandix_allowed CLEARED + DISABLED (no users)" >> "$LOG"
+        echo "[Traffic-Quota] traffic_allowed CLEARED + DISABLED (no users)" >> "$LOG"
     fi
 fi
 
 # --- SINGLE COMMIT & RELOAD ---
 if [ "$FW_CHANGED" = "1" ] || [ "$FORCE" = "1" ]; then
     if ! uci commit firewall; then
-        echo "[Bandix-Quota] FIREWALL COMMIT FAILED!" >> "$LOG"
+        echo "[Traffic-Quota] FIREWALL COMMIT FAILED!" >> "$LOG"
         exit 1
     fi
 
     if ! /etc/init.d/firewall reload >/dev/null 2>&1; then
-        echo "[Bandix-Quota] FIREWALL RELOAD FAILED!" >> "$LOG"
+        echo "[Traffic-Quota] FIREWALL RELOAD FAILED!" >> "$LOG"
         exit 1
     fi
 fi
@@ -444,7 +444,7 @@ get_ip_from_mac() {
 }
 
 if [ -n "$NEW_BLOCK_MACS" ]; then
-    echo "[Bandix-Quota] KILLING NEWLY BLOCKED USERS..." >> "$LOG"
+    echo "[Traffic-Quota] KILLING NEWLY BLOCKED USERS..." >> "$LOG"
 
     for MAC in $NEW_BLOCK_MACS; do
         IP=$(get_ip_from_mac "$MAC")
@@ -452,11 +452,11 @@ if [ -n "$NEW_BLOCK_MACS" ]; then
         if [ -n "$IP" ]; then
             conntrack -D -s "$IP" >/dev/null 2>&1
             conntrack -D -d "$IP" >/dev/null 2>&1
-            echo "[Bandix-Quota] KILLED CONNECTIONS $MAC ($IP)" >> "$LOG"
+            echo "[Traffic-Quota] KILLED CONNECTIONS $MAC ($IP)" >> "$LOG"
         fi
     done
 else
-    echo "[Bandix-Quota] NO NEWLY BLOCKED USERS" >> "$LOG"
+    echo "[Traffic-Quota] NO NEWLY BLOCKED USERS" >> "$LOG"
 fi
 
-echo "[Bandix-Quota] QUOTA DONE" >> "$LOG"
+echo "[Traffic-Quota] QUOTA DONE" >> "$LOG"
