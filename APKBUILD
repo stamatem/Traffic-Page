@@ -2,7 +2,7 @@ pkgname=traffic-page
 pkgver=1.0.0
 pkgrel=0
 pkgdesc="Bandix OpenWRT Web UI & Quota Management"
-url="https://github.com/stamatem/Bandix-Page"
+url="https://github.com/stamatem/Traffic-Page"
 arch="noarch"
 license="MIT"
 
