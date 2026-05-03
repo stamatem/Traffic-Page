@@ -476,6 +476,13 @@ if [ "$NEW_DHCP_FP" != "$OLD_DHCP_FP" ] || [ "$NEW_DHCP_FP" != "$ACTUAL_DHCP_FP"
 
     if add_dhcp_leases; then
         echo "$NEW_DHCP_FP" > "$DHCP_FP_FILE"
+
+    # Ensure dynamicdhcp is disabled on TRAFFIC_PAGE (only if missing)
+    if ! uci -q get dhcp.TRAFFIC_PAGE.dynamicdhcp >/dev/null 2>&1; then
+        uci set dhcp.TRAFFIC_PAGE.dynamicdhcp='0'
+        uci commit dhcp
+    fi
+
     else
         echo "[Traffic-Page] DHCP rebuild failed" >> "$LOG"
         respond '{"status":"error","message":"dhcp_failed"}'
