@@ -10,10 +10,108 @@ echo "[Bandix-Page] Removing..."
 # restart cron to apply changes
 /etc/init.d/cron restart 2>/dev/null
 
+TRAFFIC_IFACE="TRAFFIC_PAGE"
+
+# -------------------------
+# remove TRAFFIC_PAGE wireless
+# -------------------------
+WIFI_CHANGED=0
+
+for WIFI_SEC in wifinet30 wifinet31; do
+    if [ "$(uci -q get wireless.$WIFI_SEC.network 2>/dev/null)" = "$TRAFFIC_IFACE" ] || \
+       [ "$(uci -q get wireless.$WIFI_SEC.ssid 2>/dev/null)" = "$TRAFFIC_IFACE" ]; then
+        uci delete wireless.$WIFI_SEC 2>/dev/null && WIFI_CHANGED=1
+    fi
+done
+
+if [ "$WIFI_CHANGED" = "1" ]; then
+    uci commit wireless 2>/dev/null
+    wifi reload >/dev/null 2>&1 || wifi >/dev/null 2>&1
+    echo "[Bandix-Page] Wireless removed"
+fi
+
+# -------------------------
+# remove TRAFFIC_PAGE network
+# -------------------------
+NET_CHANGED=0
+
+uci -q delete network.$TRAFFIC_IFACE 2>/dev/null && NET_CHANGED=1
+
+for IDX in $(uci show network 2>/dev/null | awk -F'[.=]' -v dev="$TRAFFIC_IFACE" '
+    /\.name=/ {
+        section=$2
+        value=$0
+        sub(/^[^=]*=/, "", value)
+        gsub(/\047/, "", value)
+
+        if (value == dev) {
+            idx=section
+            gsub(/@device\[|\]/, "", idx)
+            print idx
+        }
+    }
+' | sort -rn); do
+    uci delete network.@device[$IDX] 2>/dev/null && NET_CHANGED=1
+done
+
+if [ "$NET_CHANGED" = "1" ]; then
+    uci commit network 2>/dev/null
+    /etc/init.d/network reload >/dev/null 2>&1
+    echo "[Bandix-Page] Network removed"
+fi
+
+# -------------------------
+# remove TRAFFIC_PAGE firewall zone/rules
+# -------------------------
+FW_CHANGED=0
+
+for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' -v src="$TRAFFIC_IFACE" '
+    /^firewall\.@rule\[[0-9]+\]\./ {
+        section=$2
+        prop=$3
+        value=$0
+        sub(/^[^=]*=/, "", value)
+        gsub(/\047/, "", value)
+
+        data[section,prop]=value
+        sections[section]=1
+    }
+
+    END {
+        for (section in sections) {
+            if (data[section,"src"] == src &&
+                (data[section,"name"] == "allow-dns-guest" ||
+                 data[section,"name"] == "allow-dhcp-guest")) {
+                idx=section
+                gsub(/@rule\[|\]/, "", idx)
+                print idx
+            }
+        }
+    }
+' | sort -rn); do
+    uci delete firewall.@rule[$IDX] 2>/dev/null && FW_CHANGED=1
+done
+
+for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' -v zone="$TRAFFIC_IFACE" '
+    /^firewall\.@zone\[[0-9]+\]\.name=/ {
+        section=$2
+        value=$0
+        sub(/^[^=]*=/, "", value)
+        gsub(/\047/, "", value)
+
+        if (value == zone) {
+            idx=section
+            gsub(/@zone\[|\]/, "", idx)
+            print idx
+        }
+    }
+' | sort -rn); do
+    uci delete firewall.@zone[$IDX] 2>/dev/null && FW_CHANGED=1
+done
+
 # -------------------------
 # remove Bandix firewall rules
 # -------------------------
-FW_CHANGED=0
 
 for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' '
     /\.name=/ {
@@ -63,11 +161,26 @@ for IDX in $(uci show dhcp 2>/dev/null | awk -F'[.=]' '
     uci delete dhcp.@host[$IDX] 2>/dev/null && DHCP_CHANGED=1
 done
 
+uci -q delete dhcp.$TRAFFIC_IFACE 2>/dev/null && DHCP_CHANGED=1
+
 if [ "$DHCP_CHANGED" = "1" ]; then
     uci commit dhcp 2>/dev/null
     ubus call service reload '{"name":"dnsmasq"}' >/dev/null 2>&1 \
         || /etc/init.d/dnsmasq restart >/dev/null 2>&1
     echo "[Bandix-Page] DHCP hosts removed"
+fi
+
+# -------------------------
+# remove Bandix UCI config
+# -------------------------
+BANDIX_CHANGED=0
+
+uci -q delete bandix.general 2>/dev/null && BANDIX_CHANGED=1
+uci -q delete bandix.traffic 2>/dev/null && BANDIX_CHANGED=1
+
+if [ "$BANDIX_CHANGED" = "1" ]; then
+    uci commit bandix 2>/dev/null
+    echo "[Bandix-Page] Bandix config removed"
 fi
 
 # -------------------------
