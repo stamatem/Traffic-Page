@@ -654,7 +654,7 @@ input:checked + .slider:before {
   <div class="row">
     <input 
       id="network"
-      placeholder="192.168.1"
+      placeholder="192.168.50"
       inputmode="numeric"
       pattern="^(\d{1,3}\.){2}\d{1,3}$"
       maxlength="11"
@@ -921,12 +921,12 @@ async function load() {
   let changed = false;
 
   if (!users._network) {
-    users._network = "192.168.1";
+    users._network = "192.168.50";
     changed = true;
   }
 
   if (!users._zone) {
-    users._zone = "lan";
+    users._zone = "TRAFFIC_PAGE";
     changed = true;
   }
 
@@ -957,7 +957,7 @@ async function load() {
   // -------------------------
 
   document.getElementById('multiplier').value = users._multiplier || 1.00;
-  document.getElementById('network').value = users._network || "192.168.1";
+  document.getElementById('network').value = users._network || "192.168.50";
   document.getElementById('refresh').value = users._refresh || 2;
 
   const select = document.getElementById('noBlockUser');
@@ -1168,7 +1168,7 @@ async function saveNetwork(btn) {
     parts.length !== 3 ||
     parts.some(p => !/^\d{1,3}$/.test(p) || Number(p) > 255)
   ) {
-    alert("Invalid network (example: 192.168.1)");
+    alert("Invalid network (example: 192.168.50)");
     return;
   }
 
