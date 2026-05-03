@@ -1,10 +1,10 @@
 #!/bin/busybox sh
 
-TMP_BASE="/tmp/bandixpage"
+TMP_BASE="/tmp/trafficpage"
 mkdir -p "$TMP_BASE"
 
-PASS_FILE="/usr/share/bandix-page.json"
-PASS_TMP="$TMP_BASE/bandix-page.json.tmp"
+PASS_FILE="/usr/share/traffic-page.json"
+PASS_TMP="$TMP_BASE/traffic-page.json.tmp"
 
 DATA_FILE="/www/data/users-pay.json"
 TMP_FILE="$TMP_BASE/users-pay.json.tmp"
