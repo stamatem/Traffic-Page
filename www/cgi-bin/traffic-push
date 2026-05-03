@@ -1,14 +1,14 @@
 #!/bin/busybox sh
 
-TMP_BASE="/tmp/bandixpage"
+TMP_BASE="/tmp/trafficpage"
 
 mkdir -p "$TMP_BASE"
 
-BUFFER="$TMP_BASE/bandix-buffer.json"
-TMP="$TMP_BASE/bandix-buffer.json.tmp"
+BUFFER="$TMP_BASE/traffic-buffer.json"
+TMP="$TMP_BASE/traffic-buffer.json.tmp"
 
 
-LOCK="$TMP_BASE/bandix.lock"
+LOCK="$TMP_BASE/traffic.lock"
 LAST_WRITE="$TMP_BASE/last_write"
 
 INTERVAL=30
