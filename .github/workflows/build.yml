@@ -17,8 +17,8 @@ jobs:
     - uses: actions/checkout@v4
 
     - run: |
-        chmod +x bandix-page.post-install
-        chmod +x bandix-page.post-deinstall
+        chmod +x traffic-page.post-install
+        chmod +x traffic-page.post-deinstall
 
     - run: |
         adduser -D builder
@@ -40,5 +40,5 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: bandix-page-apk
+        name: traffic-page-apk
         path: /tmp/artifacts/*.apk
