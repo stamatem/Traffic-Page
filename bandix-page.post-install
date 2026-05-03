@@ -115,21 +115,21 @@ uci commit network
 
 # Wireless SSIDs
 if uci -q get wireless.radio1 >/dev/null 2>&1; then
-    uci set wireless.wifinet30='wifi-iface'
-    uci set wireless.wifinet30.device='radio1'
-    uci set wireless.wifinet30.mode='ap'
-    uci set wireless.wifinet30.ssid="$TRAFFIC_IFACE"
-    uci set wireless.wifinet30.encryption='none'
-    uci set wireless.wifinet30.network="$TRAFFIC_IFACE"
+    uci set wireless.wifinet98='wifi-iface'
+    uci set wireless.wifinet98.device='radio1'
+    uci set wireless.wifinet98.mode='ap'
+    uci set wireless.wifinet98.ssid="$TRAFFIC_IFACE"
+    uci set wireless.wifinet98.encryption='none'
+    uci set wireless.wifinet98.network="$TRAFFIC_IFACE"
 fi
 
 if uci -q get wireless.radio0 >/dev/null 2>&1; then
-    uci set wireless.wifinet31='wifi-iface'
-    uci set wireless.wifinet31.device='radio0'
-    uci set wireless.wifinet31.mode='ap'
-    uci set wireless.wifinet31.ssid="$TRAFFIC_IFACE"
-    uci set wireless.wifinet31.encryption='none'
-    uci set wireless.wifinet31.network="$TRAFFIC_IFACE"
+    uci set wireless.wifinet99='wifi-iface'
+    uci set wireless.wifinet99.device='radio0'
+    uci set wireless.wifinet99.mode='ap'
+    uci set wireless.wifinet99.ssid="$TRAFFIC_IFACE"
+    uci set wireless.wifinet99.encryption='none'
+    uci set wireless.wifinet99.network="$TRAFFIC_IFACE"
 fi
 
 uci commit wireless 2>/dev/null
