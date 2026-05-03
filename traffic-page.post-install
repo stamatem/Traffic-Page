@@ -32,7 +32,7 @@ ln -sf /tmp/trafficpage/trafficquota.log /www/data/trafficquota.log
 # -------------------------
 
 TRAFFIC_IFACE="TRAFFIC_PAGE"
-TRAFFIC_IP="192.168.50.1"
+TRAFFIC_IP="10.99.100.1"
 TRAFFIC_NETMASK="255.255.255.0"
 TRAFFIC_DNS="8.8.8.8"
 
