@@ -195,19 +195,6 @@ if [ "$DHCP_CHANGED" = "1" ]; then
 fi
 
 # -------------------------
-# remove Bandix UCI config
-# -------------------------
-BANDIX_CHANGED=0
-
-uci -q delete bandix.general 2>/dev/null && BANDIX_CHANGED=1
-uci -q delete bandix.traffic 2>/dev/null && BANDIX_CHANGED=1
-
-if [ "$BANDIX_CHANGED" = "1" ]; then
-    uci commit bandix 2>/dev/null
-    echo "[Traffic-Page] Bandix config removed"
-fi
-
-# -------------------------
 # remove symlinks
 # -------------------------
 rm -f /www/data/traffic-buffer.json
