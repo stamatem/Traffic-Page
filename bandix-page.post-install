@@ -4,30 +4,43 @@ echo "[Bandix-Page] Setup..."
 
 # Ensure directories exist
 mkdir -p /www/data
+mkdir -p /usr/share
+mkdir -p /tmp/bandixpage
 
-# Create default JSON files (if missing)
+# Create required data files (if missing)
 [ -f /www/data/users.json ] || echo '{}' > /www/data/users.json
-[ -f /www/data/bandix-public.json ] || echo '{}' > /www/data/bandix-public.json
+
 if [ ! -f /www/data/users-pay.json ]; then
-    echo '{"password":"password","paid":{}}' > /www/data/users-pay.json
+    echo '{"paid":{}}' > /www/data/users-pay.json
 fi
 
-# Fix permissions
-chmod 664 /www/data/*.json 2>/dev/null
+if [ ! -f /usr/share/bandix-page.json ]; then
+    echo '{"password":"password"}' > /usr/share/bandix-page.json
+fi
+
+# Ensure temp files exist
+[ -f /tmp/bandixpage/bandix-buffer.json ] || touch /tmp/bandixpage/bandix-buffer.json
+[ -f /tmp/bandixpage/bandixquota.log ] || touch /tmp/bandixpage/bandixquota.log
+[ -f /tmp/bandixpage/bandix.cache ] || touch /tmp/bandixpage/bandix.cache
+
+# Create symlinks (force overwrite if needed)
+ln -sf /tmp/bandixpage/bandix-buffer.json /www/data/bandix-buffer.json
+ln -sf /tmp/bandixpage/bandixquota.log /www/data/bandixquota.log
 
 # Ensure scripts are executable
 [ -d /www/cgi-bin ] && chmod +x /www/cgi-bin/* 2>/dev/null
-[ -f /usr/bin/bandix-flush ] && chmod +x /usr/bin/bandix-flush
 [ -f /usr/bin/bandix-quota ] && chmod +x /usr/bin/bandix-quota
 
-# data permissions
-chown -R root:nogroup /www/data
-chmod -R 775 /www/data
+# Fix permissions
+chmod 664 /www/data/users.json 2>/dev/null
+chmod 664 /www/data/users-pay.json 2>/dev/null
+chmod 600 /usr/share/bandix-page.json 2>/dev/null
+chmod 664 /tmp/bandixpage/* 2>/dev/null
 
-# ---- Default cron (only if missing) ----
+# Default quota cron
 if ! grep -q 'bandix-quota' /etc/crontabs/root 2>/dev/null; then
     echo "*/2 * * * * /usr/bin/bandix-quota" >> /etc/crontabs/root
-    /etc/init.d/cron restart
+    /etc/init.d/cron restart 2>/dev/null
 fi
 
 echo "[Bandix-Page] Ready"
