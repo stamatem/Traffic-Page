@@ -17,7 +17,7 @@ TRAFFIC_IFACE="TRAFFIC_PAGE"
 # -------------------------
 WIFI_CHANGED=0
 
-for WIFI_SEC in wifinet30 wifinet31; do
+for WIFI_SEC in wifinet98 wifinet99; do
     if [ "$(uci -q get wireless.$WIFI_SEC.network 2>/dev/null)" = "$TRAFFIC_IFACE" ] || \
        [ "$(uci -q get wireless.$WIFI_SEC.ssid 2>/dev/null)" = "$TRAFFIC_IFACE" ]; then
         uci delete wireless.$WIFI_SEC 2>/dev/null && WIFI_CHANGED=1
