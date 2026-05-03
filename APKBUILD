@@ -1,17 +1,15 @@
 pkgname=bandix-page
-pkgver=1.3.0
+pkgver=2.0.0
 pkgrel=0
-pkgdesc="Bandix OpenWRT Web UI"
+pkgdesc="Bandix OpenWRT Web UI & Quota Management"
 url="https://github.com/stamatem/Bandix-Page"
 arch="noarch"
 license="MIT"
 
 depends="
-gawk
 grep
 sed
 jq
-curl
 "
 makedepends=""
 subpackages=""
@@ -29,6 +27,7 @@ package() {
     mkdir -p "$pkgdir/www/cgi-bin"
     mkdir -p "$pkgdir/www/data"
     mkdir -p "$pkgdir/usr/bin"
+    mkdir -p "$pkgdir/usr/share"
 
     cp -r ./www/* "$pkgdir/www/"
     cp -r ./usr/bin/* "$pkgdir/usr/bin/"
