@@ -93,7 +93,10 @@ find_firewall_rule() {
 }
 
 find_firewall_forwarding() {
-    uci show firewall 2>/dev/null | awk -F'[.=]' -v src="$TRAFFIC_IFACE" '
+    SRC="$1"
+    DEST="$2"
+
+    uci show firewall 2>/dev/null | awk -F'[.=]' -v src="$SRC" -v dest="$DEST" '
         /^firewall\.@forwarding\[[0-9]+\]\./ {
             section=$2
             prop=$3
@@ -107,9 +110,11 @@ find_firewall_forwarding() {
 
         END {
             for (section in sections) {
-                if (data[section,"src"] == src && data[section,"dest"] == "lan") {
-                    print section
-                    exit
+                if (data[section,"src"] == src) {
+                    if (dest == "" || data[section,"dest"] == dest) {
+                        print section
+                        exit
+                    }
                 }
             }
         }
@@ -220,12 +225,18 @@ if [ -n "$LAN_ZONE" ]; then
     uci set firewall.$LAN_ZONE.masq='1'
 fi
 
-# Firewall forwarding to lan
-FW_FORWARD="$(find_firewall_forwarding)"
-[ -n "$FW_FORWARD" ] || FW_FORWARD="$(uci add firewall forwarding)"
+# Firewall forwarding to lan and wan
+FW_FORWARD_LAN="$(find_firewall_forwarding "$TRAFFIC_IFACE" "lan")"
+[ -n "$FW_FORWARD_LAN" ] || FW_FORWARD_LAN="$(uci add firewall forwarding)"
 
-uci set firewall.$FW_FORWARD.src="$TRAFFIC_IFACE"
-uci set firewall.$FW_FORWARD.dest='lan'
+uci set firewall.$FW_FORWARD_LAN.src="$TRAFFIC_IFACE"
+uci set firewall.$FW_FORWARD_LAN.dest='lan'
+
+FW_FORWARD_WAN="$(find_firewall_forwarding "$TRAFFIC_IFACE" "wan")"
+[ -n "$FW_FORWARD_WAN" ] || FW_FORWARD_WAN="$(uci add firewall forwarding)"
+
+uci set firewall.$FW_FORWARD_WAN.src="$TRAFFIC_IFACE"
+uci set firewall.$FW_FORWARD_WAN.dest='wan'
 
 uci commit firewall
 
@@ -236,6 +247,7 @@ uci set dhcp.$TRAFFIC_IFACE.start='10'
 uci set dhcp.$TRAFFIC_IFACE.limit='150'
 uci set dhcp.$TRAFFIC_IFACE.leasetime='infinite'
 uci set dhcp.$TRAFFIC_IFACE.dhcpv4='server'
+uci set dhcp.$TRAFFIC_IFACE.dynamicdhcp='0'
 uci delete dhcp.$TRAFFIC_IFACE.dhcp_option 2>/dev/null
 uci add_list dhcp.$TRAFFIC_IFACE.dhcp_option="6,$TRAFFIC_DNS"
 
