@@ -8,7 +8,7 @@ mkdir -p /usr/share
 mkdir -p /tmp/bandixpage
 
 # Create required data files (if missing)
-[ -f /www/data/users.json ] || echo '{}' > /www/data/users.json
+[ -f /www/data/users.json ] || echo '{"_zone":"TRAFFIC_PAGE","_network":"192.168.50","_refresh":2,"_multiplier":1}' > /www/data/users.json
 
 if [ ! -f /www/data/users-pay.json ]; then
     echo '{"paid":{}}' > /www/data/users-pay.json
