@@ -1,11 +1,11 @@
 #!/bin/busybox sh
 
-echo "[Bandix-Page] Setup..."
+echo "[Traffic-Page] Setup..."
 
 # Ensure directories exist
 mkdir -p /www/data
 mkdir -p /usr/share
-mkdir -p /tmp/bandixpage
+mkdir -p /tmp/trafficpage
 
 # Create required data files (if missing)
 [ -f /www/data/users.json ] || echo '{"_zone":"TRAFFIC_PAGE","_network":"192.168.50","_refresh":2,"_multiplier":1}' > /www/data/users.json
@@ -14,18 +14,18 @@ if [ ! -f /www/data/users-pay.json ]; then
     echo '{"paid":{}}' > /www/data/users-pay.json
 fi
 
-if [ ! -f /usr/share/bandix-page.json ]; then
-    echo '{"password":"password"}' > /usr/share/bandix-page.json
+if [ ! -f /usr/share/traffic-page.json ]; then
+    echo '{"password":"password"}' > /usr/share/traffic-page.json
 fi
 
 # Ensure temp files exist
-[ -f /tmp/bandixpage/bandix-buffer.json ] || touch /tmp/bandixpage/bandix-buffer.json
-[ -f /tmp/bandixpage/bandixquota.log ] || touch /tmp/bandixpage/bandixquota.log
-[ -f /tmp/bandixpage/bandix.cache ] || touch /tmp/bandixpage/bandix.cache
+[ -f /tmp/trafficpage/traffic-buffer.json ] || touch /tmp/trafficpage/traffic-buffer.json
+[ -f /tmp/trafficpage/trafficquota.log ] || touch /tmp/trafficpage/trafficquota.log
+[ -f /tmp/trafficpage/traffic.cache ] || touch /tmp/trafficpage/traffic.cache
 
 # Create symlinks (force overwrite if needed)
-ln -sf /tmp/bandixpage/bandix-buffer.json /www/data/bandix-buffer.json
-ln -sf /tmp/bandixpage/bandixquota.log /www/data/bandixquota.log
+ln -sf /tmp/trafficpage/traffic-buffer.json /www/data/traffic-buffer.json
+ln -sf /tmp/trafficpage/trafficquota.log /www/data/trafficquota.log
 
 # -------------------------
 # OpenWrt TRAFFIC_PAGE config
@@ -175,10 +175,10 @@ uci delete firewall.$FW_ZONE.network 2>/dev/null
 uci add_list firewall.$FW_ZONE.network="$TRAFFIC_IFACE"
 
 # Firewall page/admin access rule
-PAGE_RULE="$(find_firewall_rule 'bandix_page')"
+PAGE_RULE="$(find_firewall_rule 'traffic_page')"
 [ -n "$PAGE_RULE" ] || PAGE_RULE="$(uci add firewall rule)"
 
-uci set firewall.$PAGE_RULE.name='bandix_page'
+uci set firewall.$PAGE_RULE.name='traffic_page'
 uci set firewall.$PAGE_RULE.src="$TRAFFIC_IFACE"
 uci delete firewall.$PAGE_RULE.dest 2>/dev/null
 uci set firewall.$PAGE_RULE.dest_ip="$TRAFFIC_IP"
@@ -262,7 +262,7 @@ uci set bandix.traffic.enabled='1'
 uci set bandix.traffic.traffic_enable_storage='1'
 uci set bandix.traffic.traffic_exclude_iface_device='1'
 uci set bandix.traffic.traffic_flush_interval='300'
-uci set bandix.traffic.traffic_export_url='http://127.0.0.1/cgi-bin/bandix-push'
+uci set bandix.traffic.traffic_export_url='http://127.0.0.1/cgi-bin/traffic-push'
 
 uci commit bandix
 
@@ -275,20 +275,20 @@ ubus call service reload '{"name":"dnsmasq"}' >/dev/null 2>&1 \
 
 # Ensure scripts are executable
 [ -d /www/cgi-bin ] && chmod +x /www/cgi-bin/* 2>/dev/null
-[ -f /usr/bin/bandix-quota ] && chmod +x /usr/bin/bandix-quota
+[ -f /usr/bin/traffic-quota ] && chmod +x /usr/bin/traffic-quota
 
 # Fix permissions
 chmod 664 /www/data/users.json 2>/dev/null
 chmod 664 /www/data/users-pay.json 2>/dev/null
-chmod 600 /usr/share/bandix-page.json 2>/dev/null
-chmod 664 /tmp/bandixpage/* 2>/dev/null
+chmod 600 /usr/share/traffic-page.json 2>/dev/null
+chmod 664 /tmp/trafficpage/* 2>/dev/null
 
 # Default quota cron
-if ! grep -q 'bandix-quota' /etc/crontabs/root 2>/dev/null; then
-    echo "*/2 * * * * /usr/bin/bandix-quota" >> /etc/crontabs/root
+if ! grep -q 'traffic-quota' /etc/crontabs/root 2>/dev/null; then
+    echo "*/2 * * * * /usr/bin/traffic-quota" >> /etc/crontabs/root
     /etc/init.d/cron restart 2>/dev/null
 fi
 
-echo "[Bandix-Page] Ready"
+echo "[Traffic-Page] Ready"
 
 exit 0
