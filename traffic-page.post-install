@@ -171,6 +171,7 @@ uci set firewall.$FW_ZONE.name="$TRAFFIC_IFACE"
 uci set firewall.$FW_ZONE.input='REJECT'
 uci set firewall.$FW_ZONE.output='ACCEPT'
 uci set firewall.$FW_ZONE.forward='REJECT'
+uci set firewall.$FW_ZONE.mtu_fix='1'
 uci delete firewall.$FW_ZONE.network 2>/dev/null
 uci add_list firewall.$FW_ZONE.network="$TRAFFIC_IFACE"
 
