@@ -122,7 +122,10 @@ for IDX in $(uci show firewall 2>/dev/null | awk -F'[.=]' '
         if (name == "traffic_page" ||
             name == "traffic_block" ||
             name == "traffic_allowed" ||
-            name == "traffic_unknown") {
+            name == "traffic_unknown" ||
+            name == "allow-dns-guest" ||
+            name == "allow-dhcp-guest" ||
+            name == "ALLOW MESH CLIENTS") {
             idx=section
             gsub(/@rule\[|\]/, "", idx)
             print idx
