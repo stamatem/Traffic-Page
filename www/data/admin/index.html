@@ -828,10 +828,11 @@ function changeMultiplier(step) {
 
   val += step * 0.01;
 
-  // keep 2 decimals clean (no 1.009999 crap)
-  val = Math.round(val * 100) / 100;
+  // clean decimals safely
+  val = Number(val.toFixed(2));
 
-  if (val < 1) val = 1;
+  // allow values below 1
+  if (val < 0.01) val = 0.01;
 
   input.value = val.toFixed(2);
 }
@@ -1488,8 +1489,8 @@ async function cleanupBandix(btn) {
 async function saveMultiplier(btn) {
   const val = parseFloat(document.getElementById('multiplier').value);
 
-  if (isNaN(val) || val < 1) {
-    alert("Multiplier must be at least 1");
+  if (isNaN(val) || val < 0.01) {
+    alert("Multiplier must be at least 0.01");
     return;
   }
 
