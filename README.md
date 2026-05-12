@@ -55,8 +55,9 @@ You may change the Wi-Fi SSID name, password, and other wireless settings inside
 
 **Important:**
 
-DO NOT rename the Guest Network interface/device inside Interfaces or Devices.
-Leave the interface name as: TRAFFIC_PAGE
+DO NOT rename the Guest Network Interface/Device or Firewall Zone.
+Leave the Interface/Device name as: TRAFFIC_PAGE
+Leave the Firewall Zone as: TRAFFIC_PAGE
 
 <br>
 
