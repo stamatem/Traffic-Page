@@ -9,8 +9,10 @@ https://github.com/timsaya/openwrt-bandix/releases
 
 Upload the .apk file through: LuCI –> System -> Software –> Upload Package
 
-Connect SSH and run:      apk add --allow-untrusted /tmp/upload.apk
-
+Connect SSH and run:
+```bash
+apk add --allow-untrusted /tmp/upload.apk
+```
 <br>
 
 ### Install LuCI App Bandix
@@ -20,7 +22,10 @@ https://github.com/timsaya/luci-app-bandix/releases
 
 Upload the .apk file through: LuCI –> System -> Software –> Upload Package
 
-Connect SSH and run:      apk add --allow-untrusted /tmp/upload.apk
+Connect SSH and run:
+```bash
+apk add --allow-untrusted /tmp/upload.apk
+```
 
 <br>
 
@@ -30,7 +35,10 @@ https://github.com/stamatem/Traffic-Page/releases
 
 Upload the .apk file through: LuCI –> System -> Software –> Upload Package
 
-Connect SSH and run:      apk add --allow-untrusted /tmp/upload.apk
+Connect SSH and run:
+```bash
+apk add --allow-untrusted /tmp/upload.apk
+```
 
 No additional configuration is required for **Bandix** itself.
 
