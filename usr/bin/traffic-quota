@@ -452,6 +452,7 @@ if [ -n "$NEW_BLOCK_MACS" ]; then
         if [ -n "$IP" ]; then
             conntrack -D -s "$IP" >/dev/null 2>&1
             conntrack -D -d "$IP" >/dev/null 2>&1
+            ip neigh flush "$IP" >/dev/null 2>&1
             echo "[Traffic-Quota] KILLED CONNECTIONS $MAC ($IP)" >> "$LOG"
         fi
     done
