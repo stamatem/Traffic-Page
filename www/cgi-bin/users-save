@@ -56,6 +56,7 @@ ensure_symlink() {
     ln -sf "$TARGET" "$LINK"
 }
 
+ensure_symlink "$TMP_BASE/devices.txt" "/www/devices.txt"
 mkdir -p /www/data
 ensure_symlink "$TMP_BASE/traffic-buffer.json" "/www/data/traffic-buffer.json"
 ensure_symlink "$TMP_BASE/trafficquota.log" "/www/data/trafficquota.log"
@@ -505,6 +506,7 @@ if [ "$NEW_DHCP_FP" != "$OLD_DHCP_FP" ] || [ "$NEW_DHCP_FP" != "$ACTUAL_DHCP_FP"
 
     if add_dhcp_leases; then
         echo "$NEW_DHCP_FP" > "$DHCP_FP_FILE"
+        /usr/bin/generate-hosts.sh >> "$LOG" 2>&1 || true
 
     # Ensure dynamicdhcp is disabled on TRAFFIC_PAGE (only if missing)
     if ! uci -q get dhcp.TRAFFIC_PAGE.dynamicdhcp >/dev/null 2>&1; then
