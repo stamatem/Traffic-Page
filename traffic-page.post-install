@@ -188,6 +188,34 @@ uci set firewall.$PAGE_RULE.proto='tcp'
 uci set firewall.$PAGE_RULE.target='ACCEPT'
 uci set firewall.$PAGE_RULE.enabled='1'
 
+# Firewall rule: allow mesh clients to LAN
+MESH_RULE="$(find_firewall_rule 'ALLOW MESH CLIENTS')"
+[ -n "$MESH_RULE" ] || MESH_RULE="$(uci add firewall rule)"
+
+uci set firewall.$MESH_RULE.name='ALLOW MESH CLIENTS'
+uci set firewall.$MESH_RULE.src="$TRAFFIC_IFACE"
+uci set firewall.$MESH_RULE.dest='lan'
+
+# Reset lists to avoid duplicates
+uci delete firewall.$MESH_RULE.src_ip 2>/dev/null
+uci delete firewall.$MESH_RULE.proto 2>/dev/null
+
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.2'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.3'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.4'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.5'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.6'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.7'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.8'
+uci add_list firewall.$MESH_RULE.src_ip='10.99.100.9'
+
+uci add_list firewall.$MESH_RULE.proto='tcp'
+uci add_list firewall.$MESH_RULE.proto='udp'
+uci add_list firewall.$MESH_RULE.proto='icmp'
+
+uci set firewall.$MESH_RULE.target='ACCEPT'
+uci set firewall.$MESH_RULE.enabled='1'
+
 # Firewall DNS rule
 DNS_RULE="$(find_firewall_rule 'allow-dns-guest')"
 [ -n "$DNS_RULE" ] || DNS_RULE="$(uci add firewall rule)"
@@ -283,6 +311,7 @@ ubus call service reload '{"name":"dnsmasq"}' >/dev/null 2>&1 \
 # Ensure scripts are executable
 [ -d /www/cgi-bin ] && chmod +x /www/cgi-bin/* 2>/dev/null
 [ -f /usr/bin/traffic-quota ] && chmod +x /usr/bin/traffic-quota
+[ -f /usr/bin/generate-hosts.sh ] && chmod +x /usr/bin/generate-hosts.sh
 
 # Fix permissions
 chmod 664 /www/data/users.json 2>/dev/null
